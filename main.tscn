@@ -1,0 +1,140 @@
+[gd_scene load_steps=10 format=3 uid="uid://bvd5ouyx2wgh"]
+
+[ext_resource type="Script" uid="uid://7tjo0raqyx5w" path="res://scripts/main.gd" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://2vernnjqiib" path="res://scenes/gameManager.tscn" id="2_0xm2m"]
+[ext_resource type="FontFile" uid="uid://ddmd7pp0hamna" path="res://assets/fonts/PublicPixel.ttf" id="3_h2yge"]
+[ext_resource type="Texture2D" uid="uid://de8eh4sejktos" path="res://assets/icons/truco.png" id="4_7mycd"]
+[ext_resource type="FontFile" uid="uid://cpwm7d3lrhrkk" path="res://assets/fonts/PixelifySans-Regular.ttf" id="4_lquwl"]
+[ext_resource type="Texture2D" uid="uid://ds7uo6mi3phqv" path="res://assets/icons/refresh.png" id="5_7mycd"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_ig7tw")
+
+[node name="GameManager" parent="." instance=ExtResource("2_0xm2m")]
+
+[node name="ScoreContainer" type="VBoxContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 989.0
+offset_top = 3.0
+offset_right = 1149.0
+offset_bottom = 68.0
+grow_horizontal = 0
+theme_override_constants/separation = 9
+alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_h2yge")
+theme_override_font_sizes/font_size = 32
+text = "0 x 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TurnIndicators" type="HBoxContainer" parent="ScoreContainer"]
+layout_mode = 2
+theme_override_constants/separation = 33
+alignment = 1
+
+[node name="Turn1" type="Panel" parent="ScoreContainer/TurnIndicators"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="Turn2" type="Panel" parent="ScoreContainer/TurnIndicators"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1bvp3")
+
+[node name="TrucoButton" type="Button" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1049.0
+offset_top = 545.0
+offset_right = 2081.0
+offset_bottom = 1577.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(0.1, 0.1)
+icon = ExtResource("4_7mycd")
+flat = true
+
+[node name="EndGameUI" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Panel" parent="EndGameUI"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -50.0
+offset_right = 100.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_7mycd")
+
+[node name="WinLabel" type="Label" parent="EndGameUI/Panel"]
+layout_mode = 0
+offset_top = 3.0
+offset_right = 200.0
+offset_bottom = 40.0
+theme_override_fonts/font = ExtResource("4_lquwl")
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+vertical_alignment = 1
+uppercase = true
+
+[node name="RestartButton" type="Button" parent="EndGameUI/Panel"]
+layout_mode = 0
+offset_left = 74.0
+offset_top = 41.0
+offset_right = 594.0
+offset_bottom = 561.0
+scale = Vector2(0.1, 0.1)
+icon = ExtResource("5_7mycd")
+flat = true
+
+[connection signal="pressed" from="TrucoButton" to="GameManager" method="_on_truco_button_pressed"]
+[connection signal="pressed" from="EndGameUI/Panel/RestartButton" to="GameManager" method="_on_restart_button_pressed"]

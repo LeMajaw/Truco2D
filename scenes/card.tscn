@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://dc5lc1wqqvdnj"]
+
+[ext_resource type="Script" uid="uid://c24gce32ymjka" path="res://scripts/card.gd" id="1_d81rb"]
+
+[node name="Card" type="Node2D"]
+script = ExtResource("1_d81rb")
+
+[node name="Front" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+stretch_mode = 5
+
+[node name="Back" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+stretch_mode = 5
