@@ -1,6 +1,6 @@
 # 🃏 Truco2D
 
-**Truco2D** is a digital recreation of the iconic **South American card game Truco**, built with the power and flexibility of the **Godot Engine**.  
+**Truco2D** is a digital recreation of the iconic **Brazilian card game Truco**, built with the power and flexibility of the **Godot Engine**.  
 This 2D version honors the traditional gameplay while modernizing the experience for both desktop and mobile platforms.
 
 ---
