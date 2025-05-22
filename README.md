@@ -1,51 +1,77 @@
-# 🃏 Truco2D
+# ♠ Truco2D
 
-**Truco2D** is a digital recreation of the iconic **Brazilian card game Truco**, built with the power and flexibility of the **Godot Engine**.  
-This 2D version honors the traditional gameplay while modernizing the experience for both desktop and mobile platforms.
-
----
-
-![Godot](https://img.shields.io/badge/Engine-Godot%204.4.1-blue?logo=godot-engine&style=flat-square)
-![License](https://img.shields.io/badge/License-Custom-green?style=flat-square)
-![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=flat-square)
+**Truco2D** is a digital 2D adaptation of the classic card game **Truco Paulista**, built with **Godot Engine v4.4.1**.  
+Designed for both single-player and multiplayer play, it features animated cards, bots with multiple difficulty levels, and follows the [official rulebook](https://www.jogatina.com/regras-como-jogar-truco.html).
 
 ---
 
-## 🎮 Game Overview
+## 🎮 Overview
 
-**Truco** is a beloved trick-taking card game with deep strategy and regional flair.  
-This project aims to replicate the authentic **Truco Paulista** ruleset, as defined [here](https://www.jogatina.com/regras-como-jogar-truco.html), while introducing features for solo and multiplayer fun.
+Truco is a legendary Brazilian card game full of strategy, bluffing, and energy. This project brings it to life on desktop and mobile with:
+
+- Local and online matches
+- Turn-based logic and AI-controlled opponents
+- Modular, scalable 2D architecture
+- Ready for mobile and desktop deployment
 
 ---
 
-## 🛠️ Features
+## ✨ Features
 
-- 🧠 **Authentic Ruleset** — Faithful to *Truco Paulista* gameplay  
-- 🎨 **2D Graphics** — Responsive animations and visuals  
-- 🧩 **Modular Structure** — Organized for maintainability and scalability  
-- 🤖 **AI Bots** — Play against bots with multiple difficulty levels  
-- 🌐 **Multiplayer** — Join or create rooms with bots and friends  
-- 📱 **Cross-Platform Ready** — Targeting both Android and Steam  
+✅ Truco Paulista rules faithfully implemented  
+✅ Multiplayer rooms (host or join by code)  
+✅ Bots with 4 difficulty levels (Easy, Normal, Hard, Expert)  
+✅ 2D interface with smooth card interactions and hover effects  
+✅ Post-match menu for rematches with bot level options  
+✅ Designed for Android and Steam compatibility  
 
 ---
 
 ## 🗂️ Project Structure
+
+```bash
 Truco2D/
-├── assets/ # Card art, UI, sounds
-├── scenes/ # Godot scene files (.tscn)
-├── scripts/ # Game logic in GDScript
-├── ui/ # Buttons, score panels, menus
-├── main.tscn # Entry point scene
-├── project.godot # Godot project config
-├── icon.svg # Project icon
-└── README.md # This file
+├── assets/               # Card textures, UI, sounds
+├── scenes/
+│   ├── main.tscn         # Main 2D gameplay scene
+│   ├── deck.tscn         # Deck node
+│   ├── card.tscn         # Card prefab
+│   └── menu.tscn         # Menu interface
+├── scripts/
+│   ├── main.gd           # Core logic (turns, hands, UI)
+│   ├── card.gd           # Card hover/flip behavior
+│   ├── gameManager.gd    # Score system, Pe, round logic
+│   └── network.gd        # Multiplayer logic (WIP)
+├── ui/                   # Label, Score, Button, Panel nodes
+├── project.godot         # Godot configuration
+└── README.md             # You're here!
+```
 
 ---
 
 ## 🚀 Getting Started
 
-> **Pre-requisite:** Godot Engine 4.4.1 or higher
+### ✅ Requirements
 
-### 🧩 1. Clone the Repository
+- [Godot Engine v4.4.1](https://godotengine.org/)
+- Vulkan-compatible GPU
+- (Optional) Android SDK for mobile deployment
+
+### 🛠 Setup Instructions
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/LeMajaw/Truco2D.git
+cd Truco2D
+
+# 2. Open Godot and import the project
+#    (Choose the project.godot file from the cloned folder)
+
+# 3. (Optional) Setup Android export templates
+#    - Install Android SDK & export templates
+#    - Configure paths in Godot > Editor > Editor Settings > Android
+
+# 4. Run the game
+#    - Press F5 to test on desktop
+#    - Use Export or F6 to run on Android device
+```
