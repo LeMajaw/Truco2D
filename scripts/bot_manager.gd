@@ -1,6 +1,4 @@
 extends Node
-class_name BotManager
-
 # Bot Manager - Handles bot selection and integration with game manager
 # This script serves as a factory for creating bots of different difficulty levels
 

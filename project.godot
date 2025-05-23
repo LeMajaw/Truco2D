@@ -14,3 +14,8 @@ config/name="2D Truco"
 run/main_scene="uid://chwai1omonwge"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+BotManager="*res://scripts/bot_manager.gd"
+MultiplayerManager="*res://scripts/multiplayer_manager.gd"
+MyDebugUtils="*res://utils/debug_utils.gd"

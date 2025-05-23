@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8vxb6wj5vfgx"]
+
+[ext_resource type="Script" path="res://scripts/cross_platform_input.gd" id="1_ybdkm"]
+
+[node name="CrossPlatformInput" type="Node"]
+script = ExtResource("1_ybdkm")

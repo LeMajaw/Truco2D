@@ -2,6 +2,7 @@ extends Node
 
 const CARD_SCENE = preload("res://scenes/card.tscn")
 const PLAYER_NAME_INPUT = preload("res://scenes/player_name_input.tscn")
+const NOTIFICATION_SCENE = preload("res://scenes/notification.tscn")
 
 @onready var end_game_ui := get_node("../../OverlayLayer/EndGameUI")
 @onready var win_label := end_game_ui.get_node("Panel/WinLabel")
@@ -33,9 +34,24 @@ var current_pe_index := 0
 var value_order := ["3", "2", "ace", "king", "jack", "queen", "7", "6", "5", "4"]
 var suit_order := ["clubs", "hearts", "spades", "diamonds"]
 
+# Truco state
+enum TrucoState {NONE, CALLED, ACCEPTED, DECLINED, RAISED}
+enum TrucoLevel {NONE, TRUCO, SIX, NINE, TWELVE}
+enum TrucoResponse {ACCEPT, DECLINE, RAISE}
+
+var current_truco_state = TrucoState.NONE
+var current_truco_level = TrucoLevel.NONE
 var current_score_value := 1
 var max_score := 12
-var truco_called := false
+var truco_points = {
+	TrucoLevel.NONE: 1,
+	TrucoLevel.TRUCO: 3,
+	TrucoLevel.SIX: 6,
+	TrucoLevel.NINE: 9,
+	TrucoLevel.TWELVE: 12
+}
+var truco_caller = ""
+var waiting_for_truco_response = false
 
 var team_points = {
 	"we": 0,
@@ -70,6 +86,13 @@ const BOT_CARD_SPACE := 80
 func _ready():
 	get_tree().paused = false
 	end_game_ui.visible = false
+
+	# Connect truco button signals
+	if not truco_button.truco_called.is_connected(_on_truco_called):
+		truco_button.truco_called.connect(_on_truco_called)
+		
+	if not truco_button.truco_response.is_connected(_on_truco_response):
+		truco_button.truco_response.connect(_on_truco_response)
 
 	# Load player name from config
 	var config = ConfigFile.new()
@@ -205,6 +228,11 @@ func is_card_in_player_hand(card: Node2D) -> bool:
 
 func _on_card_clicked(event: InputEvent, card_data, card_node):
 	if event is InputEventMouseButton and event.pressed:
+		# Don't allow card play if waiting for truco response
+		if waiting_for_truco_response:
+			show_notification("Respond to the Truco call first!")
+			return
+
 		card_node.queue_free()
 		player_hand_cards.erase(card_node)
 		player_hands["player"].erase(card_data)
@@ -279,6 +307,13 @@ func show_played_card(card_data: Dictionary, position: Vector2):
 	add_child(card)
 	card.add_to_group("played_card")
 	used_cards.append(card_data)
+
+	# Add animation for played card
+	var tween = create_tween()
+	card.modulate = Color(1, 1, 1, 0)
+	tween.tween_property(card, "modulate", Color(1, 1, 1, 1), 0.3)
+	tween.tween_property(card, "scale", card.scale * 1.1, 0.1)
+	tween.tween_property(card, "scale", card.scale, 0.1)
 
 func determine_turn_result(player_card, bot1_card, bot2_card, bot3_card):
 	current_turn += 1
@@ -355,6 +390,9 @@ func determine_turn_result(player_card, bot1_card, bot2_card, bot3_card):
 		end_round_with_forced_winner("them")
 	elif current_turn >= 3:
 		end_round()
+	else:
+		# Check if bots should call truco after a turn
+		check_bot_truco_calls_mid_round()
 
 func update_turn_indicators():
 	var turn_nodes = [
@@ -417,7 +455,9 @@ func end_round():
 		start_new_round()
 		return
 
-	update_score_label(winner_team, current_score_value)
+	# Get current points based on truco state
+	var points = get_current_points()
+	update_score_label(winner_team, points)
 	print("🔢 Score → We:", team_points["we"], "| Them:", team_points["them"])
 
 	if team_points["we"] >= max_score:
@@ -425,13 +465,13 @@ func end_round():
 	elif team_points["them"] >= max_score:
 		show_end_game_ui("them")
 	else:
-		current_score_value = 1
-		truco_called = false
-		truco_button.disabled = false
+		reset_truco_state()
 		start_new_round()
 
 func end_round_with_forced_winner(team: String):
-	update_score_label(team, current_score_value)
+	# Get current points based on truco state
+	var points = get_current_points()
+	update_score_label(team, points)
 	print("🔢 Score → We:", team_points["we"], "| Them:", team_points["them"])
 
 	if team_points["we"] >= max_score:
@@ -439,16 +479,16 @@ func end_round_with_forced_winner(team: String):
 	elif team_points["them"] >= max_score:
 		show_end_game_ui("them")
 	else:
-		current_score_value = 1
-		truco_called = false
-		truco_button.disabled = false
+		reset_truco_state()
 		start_new_round()
 
 func start_new_round():
 	# Remove all played cards except the vira
 	for node in get_tree().get_nodes_in_group("played_card"):
 		if is_instance_valid(node):
-			node.queue_free()
+			var tween = create_tween()
+			tween.tween_property(node, "modulate", Color(1, 1, 1, 0), 0.3)
+			tween.tween_callback(func(): node.queue_free())
 
 	current_turn = 0
 	turn_winners.clear()
@@ -467,10 +507,10 @@ func start_new_round():
 	check_bot_truco_calls()
 
 func check_bot_truco_calls():
-	if truco_called:
+	if current_truco_state != TrucoState.NONE:
 		return
 
-	# Only allow truco calls at the beginning of a round
+	# Only allow initial truco calls at the beginning of a round
 	if current_turn > 0:
 		return
 
@@ -485,16 +525,190 @@ func check_bot_truco_calls():
 
 		# Check if this bot should call truco
 		if bot_manager.should_call_truco(player):
-			truco_called = true
-			current_score_value = 3
-			truco_button.disabled = true
+			# Bot calls truco
+			truco_caller = player
+			current_truco_state = TrucoState.CALLED
+			current_truco_level = TrucoLevel.TRUCO
+			current_score_value = truco_points[current_truco_level]
 
 			# Show truco call notification
-			print("🃏 " + player + " CALLED TRUCO! Round is now worth 3 points")
+			show_notification(player + " called TRUCO!")
 
-			# Could add visual/audio feedback here
+			# Update truco button to show response options
+			if player_is_next_to_respond():
+				waiting_for_truco_response = true
+				truco_button.handle_bot_truco_call(player, current_truco_level)
+			else:
+				# Bot responds to bot
+				handle_bot_truco_response(player)
 
 			break
+
+func check_bot_truco_calls_mid_round():
+	# Don't allow truco calls if already in progress
+	if current_truco_state != TrucoState.NONE and current_truco_state != TrucoState.ACCEPTED:
+		return
+
+	# Check if any bot wants to call truco mid-round
+	for i in range(4):
+		var player_index = (current_pe_index + i) % 4
+		var player = player_order[player_index]
+
+		# Skip player (human)
+		if player == "player":
+			continue
+
+		# Check if this bot should call truco or raise
+		if current_truco_state == TrucoState.NONE:
+			# Fresh truco call
+			if bot_manager.should_call_truco_mid_round(player, player_hands[player]):
+				# Bot calls truco
+				truco_caller = player
+				current_truco_state = TrucoState.CALLED
+				current_truco_level = TrucoLevel.TRUCO
+				current_score_value = truco_points[current_truco_level]
+
+				# Show truco call notification
+				show_notification(player + " called TRUCO!")
+
+				# Update truco button to show response options
+				if player_is_next_to_respond():
+					waiting_for_truco_response = true
+					truco_button.handle_bot_truco_call(player, current_truco_level)
+				else:
+					# Bot responds to bot
+					handle_bot_truco_response(player)
+
+				break
+		elif current_truco_state == TrucoState.ACCEPTED and current_truco_level < TrucoLevel.TWELVE:
+			# Potential raise
+			if bot_manager.should_raise_truco(player, player_hands[player], current_truco_level):
+				# Bot raises truco
+				truco_caller = player
+				current_truco_state = TrucoState.CALLED
+				current_truco_level += 1
+				current_score_value = truco_points[current_truco_level]
+
+				# Show raise notification
+				show_notification(player + " raised to " + get_truco_level_name(current_truco_level) + "!")
+
+				# Update truco button to show response options
+				if player_is_next_to_respond():
+					waiting_for_truco_response = true
+					truco_button.handle_bot_truco_call(player, current_truco_level)
+				else:
+					# Bot responds to bot
+					handle_bot_truco_response(player)
+
+				break
+
+func player_is_next_to_respond():
+	# Determine if the human player is the next to respond to a truco call
+	if truco_caller == "player":
+		return false
+
+	var caller_team = "we" if truco_caller in ["player", "bot2"] else "them"
+	var player_team = "we"
+
+	return caller_team != player_team
+
+func handle_bot_truco_response(caller):
+	# Bot responds to truco call from another bot
+	var responder = ""
+	var caller_team = "we" if caller in ["player", "bot2"] else "them"
+
+	# Find a bot from the other team to respond
+	for player in player_order:
+		if player == caller:
+			continue
+
+		var player_team = "we" if player in ["player", "bot2"] else "them"
+		if player_team != caller_team:
+			responder = player
+			break
+
+	if responder.is_empty():
+		return
+
+	# Get bot's response
+	#var response = bot_manager.get_truco_response(responder, current_truco_level)
+	var response = bot_manager.should_accept_truco(responder, current_truco_level)
+
+	match response:
+		TrucoResponse.ACCEPT:
+			# Accept the truco
+			current_truco_state = TrucoState.ACCEPTED
+			show_notification(responder + " accepted " + get_truco_level_name(current_truco_level) + "!")
+
+		TrucoResponse.DECLINE:
+			# Decline the truco
+			current_truco_state = TrucoState.DECLINED
+			show_notification(responder + " declined " + get_truco_level_name(current_truco_level) + "!")
+
+			# Award points to caller's team and start new round
+			var winner_team = caller_team
+
+			# If declined, award points for the previous level
+			var points = 1
+			if current_truco_level > TrucoLevel.TRUCO:
+				points = truco_points[current_truco_level - 1]
+
+			update_score_label(winner_team, points)
+
+			if team_points["we"] >= max_score:
+				show_end_game_ui("we")
+			elif team_points["them"] >= max_score:
+				show_end_game_ui("them")
+			else:
+				reset_truco_state()
+				start_new_round()
+
+		TrucoResponse.RAISE:
+			# Raise the truco if possible
+			if current_truco_level < TrucoLevel.TWELVE:
+				current_truco_level += 1
+				current_truco_state = TrucoState.CALLED
+				truco_caller = responder # Now the responder becomes the caller
+
+				show_notification(responder + " raised to " + get_truco_level_name(current_truco_level) + "!")
+
+				# Now the original caller needs to respond
+				handle_bot_truco_response(responder)
+			else:
+				# Can't raise beyond TWELVE, so just accept
+				current_truco_state = TrucoState.ACCEPTED
+				show_notification(responder + " accepted " + get_truco_level_name(current_truco_level) + "!")
+
+func get_truco_level_name(level):
+	match level:
+		TrucoLevel.NONE: return "TRUCO"
+		TrucoLevel.TRUCO: return "TRUCO (3)"
+		TrucoLevel.SIX: return "SEIS (6)"
+		TrucoLevel.NINE: return "NOVE (9)"
+		TrucoLevel.TWELVE: return "DOZE (12)"
+	return "UNKNOWN"
+
+func reset_truco_state():
+	current_truco_state = TrucoState.NONE
+	current_truco_level = TrucoLevel.NONE
+	current_score_value = 1
+	truco_caller = ""
+	waiting_for_truco_response = false
+
+	# Reset truco button
+	if truco_button:
+		truco_button.reset()
+
+func get_current_points():
+	# Return the current point value based on truco state and level
+	if current_truco_state == TrucoState.NONE:
+		return 1
+	elif current_truco_state == TrucoState.DECLINED:
+		# If declined, previous level points are awarded
+		var previous_level = max(current_truco_level - 1, TrucoLevel.NONE)
+		return truco_points[previous_level]
+	else:
+		return truco_points[current_truco_level]
 
 func reset_score_label():
 	team_points["we"] = 0
@@ -509,13 +723,203 @@ func update_score_label(winner_team: String, points: int) -> void:
 	team_points[winner_team] += points
 	score_label.text = "%d x %d" % [team_points["we"], team_points["them"]]
 
-func _on_truco_button_pressed():
-	if truco_called:
+	# Show score update notification
+	show_notification(winner_team.capitalize() + " scored " + str(points) + " points!")
+
+func _on_truco_called(level):
+	# Player called truco
+	truco_caller = "player"
+	current_truco_state = TrucoState.CALLED
+	current_truco_level = level
+	current_score_value = truco_points[level]
+
+	# Show notification
+	show_notification("You called " + get_truco_level_name(level) + "!")
+
+	# Get bot response
+	var responder = ""
+	for player in player_order:
+		if player == "player":
+			continue
+
+		var player_team = "we" if player in ["player", "bot2"] else "them"
+		if player_team != "we": # Player is on "we" team
+			responder = player
+			break
+
+	if responder.is_empty():
 		return
-	truco_called = true
-	current_score_value = 3
-	truco_button.disabled = true
-	print("🃏 TRUCO CALLED! Round is now worth 3 points")
+
+	# Get bot's response after a short delay
+	await get_tree().create_timer(1.0).timeout
+	var response = bot_manager.get_truco_response(responder, current_truco_level)
+
+	# Update truco button with bot's response
+
+	var truco_level = current_truco_level
+
+	if response == TrucoResponse.RAISE:
+		truco_level = current_truco_level + 1
+
+	truco_button.handle_bot_truco_response(responder, response, truco_level)
+
+	# Process the response
+	match response:
+		TrucoResponse.ACCEPT:
+			# Accept the truco
+			current_truco_state = TrucoState.ACCEPTED
+
+		TrucoResponse.DECLINE:
+			# Decline the truco
+			current_truco_state = TrucoState.DECLINED
+
+			# Award points to player's team and start new round
+			var winner_team = "we" # Player's team
+
+			# If declined, award points for the previous level
+			var points = 1
+			if current_truco_level > TrucoLevel.TRUCO:
+				points = truco_points[current_truco_level - 1]
+
+			update_score_label(winner_team, points)
+
+			if team_points["we"] >= max_score:
+				show_end_game_ui("we")
+			elif team_points["them"] >= max_score:
+				show_end_game_ui("them")
+			else:
+				await get_tree().create_timer(1.0).timeout
+				reset_truco_state()
+				start_new_round()
+
+		TrucoResponse.RAISE:
+			# Raise the truco if possible
+			if current_truco_level < TrucoLevel.TWELVE:
+				current_truco_level += 1
+				current_truco_state = TrucoState.CALLED
+				truco_caller = responder # Now the responder becomes the caller
+				waiting_for_truco_response = true
+			else:
+				# Can't raise beyond TWELVE, so just accept
+				current_truco_state = TrucoState.ACCEPTED
+
+func _on_truco_response(response, level):
+	# Player responded to bot's truco call
+	waiting_for_truco_response = false
+
+	match response:
+		TrucoResponse.ACCEPT:
+			# Player accepts the truco
+			current_truco_state = TrucoState.ACCEPTED
+			show_notification("You accepted " + get_truco_level_name(current_truco_level) + "!")
+
+		TrucoResponse.DECLINE:
+			# Player declines the truco
+			current_truco_state = TrucoState.DECLINED
+			show_notification("You declined " + get_truco_level_name(current_truco_level) + "!")
+
+			# Award points to bot's team and start new round
+			var caller_team = "we" if truco_caller in ["player", "bot2"] else "them"
+
+			# If declined, award points for the previous level
+			var points = 1
+			if current_truco_level > TrucoLevel.TRUCO:
+				points = truco_points[current_truco_level - 1]
+
+			update_score_label(caller_team, points)
+
+			if team_points["we"] >= max_score:
+				show_end_game_ui("we")
+			elif team_points["them"] >= max_score:
+				show_end_game_ui("them")
+			else:
+				await get_tree().create_timer(1.0).timeout
+				reset_truco_state()
+				start_new_round()
+
+		TrucoResponse.RAISE:
+			# Player raises the truco
+			if current_truco_level < TrucoLevel.TWELVE:
+				current_truco_level = level
+				current_truco_state = TrucoState.CALLED
+				truco_caller = "player" # Now the player becomes the caller
+
+				show_notification("You raised to " + get_truco_level_name(current_truco_level) + "!")
+
+				# Get bot response after a short delay
+				await get_tree().create_timer(1.0).timeout
+
+				# Find a bot from the other team to respond
+				var responder = ""
+				for player in player_order:
+					if player == "player":
+						continue
+
+					var player_team = "we" if player in ["player", "bot2"] else "them"
+					if player_team != "we": # Player is on "we" team
+						responder = player
+						break
+
+				if responder.is_empty():
+					return
+
+				var bot_response = bot_manager.get_truco_response(responder, current_truco_level)
+
+				# Update truco button with bot's response
+				var truco_level = current_truco_level
+				if bot_response == TrucoResponse.RAISE:
+					truco_level = current_truco_level + 1
+
+				truco_button.handle_bot_truco_response(responder, bot_response, truco_level)
+
+				# Process the response
+				match bot_response:
+					TrucoResponse.ACCEPT:
+						# Bot accepts the raise
+						current_truco_state = TrucoState.ACCEPTED
+
+					TrucoResponse.DECLINE:
+						# Bot declines the raise
+						current_truco_state = TrucoState.DECLINED
+
+						# Award points to player's team and start new round
+						var winner_team = "we" # Player's team
+
+						# If declined, award points for the previous level
+						var points = 1
+						if current_truco_level > TrucoLevel.TRUCO:
+							points = truco_points[current_truco_level - 1]
+
+						update_score_label(winner_team, points)
+
+						if team_points["we"] >= max_score:
+							show_end_game_ui("we")
+						elif team_points["them"] >= max_score:
+							show_end_game_ui("them")
+						else:
+							await get_tree().create_timer(1.0).timeout
+							reset_truco_state()
+							start_new_round()
+
+					TrucoResponse.RAISE:
+						# Bot raises again if possible
+						if current_truco_level < TrucoLevel.TWELVE:
+							current_truco_level += 1
+							current_truco_state = TrucoState.CALLED
+							truco_caller = responder
+							waiting_for_truco_response = true
+						else:
+							# Can't raise beyond TWELVE, so just accept
+							current_truco_state = TrucoState.ACCEPTED
+			else:
+				# Can't raise beyond TWELVE, so just accept
+				current_truco_state = TrucoState.ACCEPTED
+				show_notification("You accepted " + get_truco_level_name(current_truco_level) + "!")
+
+func show_notification(message):
+	var notification = NOTIFICATION_SCENE.instantiate()
+	notification.show_message(message)
+	get_tree().get_root().add_child(notification)
 
 func show_end_game_ui(winner_team: String):
 	end_game_ui.visible = true
@@ -537,3 +941,25 @@ func set_all_bot_difficulties(difficulty: int):
 # Set difficulty for a specific bot
 func set_bot_difficulty(bot_name: String, difficulty: int):
 	bot_manager.set_bot_difficulty(bot_name, difficulty)
+
+# Refresh card display when screen size changes
+func refresh_card_display():
+	# Update vira card position
+	if is_instance_valid(vira_card_node):
+		vira_card_node.position = VIRA_CARD_POS
+		vira_card_node.scale = VIRA_SCALE
+
+	# Update player hand positions
+	show_hands()
+
+	# Update bot hand preview positions
+	show_bot_hand_preview()
+
+	# Update played cards positions
+	for node in get_tree().get_nodes_in_group("played_card"):
+		if is_instance_valid(node):
+			for player in PLAYED_CARD_POSITIONS.keys():
+				if node.position.distance_to(PLAYED_CARD_POSITIONS[player]) < 50:
+					node.position = PLAYED_CARD_POSITIONS[player]
+					node.scale = VIRA_SCALE * 0.9
+					break

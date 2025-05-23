@@ -3,14 +3,14 @@ extends Node
 # Autoload script to manage multiplayer game integration
 
 var multiplayer_manager = null
-var main_scene = preload("res://main.tscn")
+var main_scene = preload("res://scenes/main.tscn")
 var multiplayer_game_scene = preload("res://scenes/multiplayer_game.tscn")
 
 func _ready():
 	# Initialize multiplayer manager
 	multiplayer_manager = load("res://scripts/multiplayer_manager.gd").new()
 	add_child(multiplayer_manager)
-	
+
 	# Connect signals
 	multiplayer_manager.game_started.connect(_on_game_started)
 	multiplayer_manager.game_state_updated.connect(_on_game_state_updated)
@@ -33,7 +33,7 @@ func join_room(player_name: String, room_code: String):
 # Leave the current multiplayer room
 func leave_room():
 	multiplayer_manager.leave_room()
-	
+
 	# Return to main menu
 	get_tree().change_scene_to_packed(main_scene)
 
@@ -58,7 +58,7 @@ func call_truco():
 func _on_game_started(initial_state):
 	# Load multiplayer game scene
 	get_tree().change_scene_to_packed(multiplayer_game_scene)
-	
+
 	# The scene will initialize itself using the initial state
 
 func _on_game_state_updated(state):

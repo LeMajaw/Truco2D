@@ -20,8 +20,12 @@ func _on_start_game(difficulty):
 	var game = load("res://scenes/arena.tscn").instantiate()
 	add_child(game)
 	current_scene = game
-
-	var game_manager = game.get_node("GameManager")
+	
+	print(game.get_tree().get_current_scene().get_name())
+	game.print_tree_pretty()
+	
+	var card_layer = game.get_node("CardLayer")
+	var game_manager = card_layer.get_node("GameManager")
 	var bot_manager = game_manager.get_node("BotManager")
 
 	bot_manager.set_all_bot_difficulties(difficulty)

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqcvpjl2xhwgj"]
+
+[ext_resource type="Script" path="res://scripts/fullscreen_manager.gd" id="1_ygkl5"]
+
+[node name="FullscreenManager" type="Node" groups=["fullscreen_manager"]]
+script = ExtResource("1_ygkl5")

@@ -1,6 +1,5 @@
 # File: utils/debug_utils.gd
 extends Node
-class_name MyDebugUtils
 
 static func save_node_properties_as_json(node: Node, path: String = "user://node_debug.json") -> void:
 	var data = {}
