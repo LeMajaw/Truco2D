@@ -1,0 +1,66 @@
+[gd_scene load_steps=4 format=3 uid="uid://gmoegcb1uwq3"]
+
+[ext_resource type="Script" uid="uid://cnxdaei3gshpg" path="res://scripts/notification.gd" id="1_lfgxs"]
+[ext_resource type="FontFile" uid="uid://cpwm7d3lrhrkk" path="res://assets/fonts/PixelifySans-Regular.ttf" id="2_lquwl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.901961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 5
+
+[node name="Notification" type="CanvasLayer"]
+script = ExtResource("1_lfgxs")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -75.0
+offset_right = 200.0
+offset_bottom = 75.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="MessageLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Notification Message"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="OkButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "OK"
+
+[connection signal="pressed" from="Panel/VBoxContainer/OkButton" to="." method="_on_ok_button_pressed"]

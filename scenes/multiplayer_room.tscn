@@ -1,0 +1,220 @@
+[gd_scene load_steps=5 format=3 uid="uid://bhsv26wo5uact"]
+
+[ext_resource type="Script" uid="uid://73mxxv0semch" path="res://scripts/multiplayer_room.gd" id="1_lfgxs"]
+[ext_resource type="FontFile" uid="uid://cpwm7d3lrhrkk" path="res://assets/fonts/PixelifySans-Regular.ttf" id="2_lquwl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.901961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j2yge"]
+bg_color = Color(0.6, 0.0392157, 0.0392157, 0.501961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0.0392157, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 3
+
+[node name="MultiplayerRoom" type="CanvasLayer"]
+script = ExtResource("1_lfgxs")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="RoomInfoContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="RoomLabel" type="Label" parent="Panel/VBoxContainer/RoomInfoContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Room Code:"
+
+[node name="RoomCodeLabel" type="Label" parent="Panel/VBoxContainer/RoomInfoContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "ABCDEF"
+
+[node name="CopyButton" type="Button" parent="Panel/VBoxContainer/RoomInfoContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "Copy"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayersLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Players"
+horizontal_alignment = 1
+
+[node name="PlayersGrid" type="GridContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="Player1Container" type="PanelContainer" parent="Panel/VBoxContainer/PlayersGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/VBoxContainer/PlayersGrid/Player1Container"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer/PlayersGrid/Player1Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Player 1 (You)"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="Panel/VBoxContainer/PlayersGrid/Player1Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "Ready"
+horizontal_alignment = 1
+
+[node name="Player2Container" type="PanelContainer" parent="Panel/VBoxContainer/PlayersGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/VBoxContainer/PlayersGrid/Player2Container"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer/PlayersGrid/Player2Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Waiting..."
+horizontal_alignment = 1
+
+[node name="AddBotButton" type="Button" parent="Panel/VBoxContainer/PlayersGrid/Player2Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "Add Bot"
+
+[node name="Player3Container" type="PanelContainer" parent="Panel/VBoxContainer/PlayersGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/VBoxContainer/PlayersGrid/Player3Container"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer/PlayersGrid/Player3Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Waiting..."
+horizontal_alignment = 1
+
+[node name="AddBotButton" type="Button" parent="Panel/VBoxContainer/PlayersGrid/Player3Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "Add Bot"
+
+[node name="Player4Container" type="PanelContainer" parent="Panel/VBoxContainer/PlayersGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/VBoxContainer/PlayersGrid/Player4Container"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer/PlayersGrid/Player4Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Waiting..."
+horizontal_alignment = 1
+
+[node name="AddBotButton" type="Button" parent="Panel/VBoxContainer/PlayersGrid/Player4Container/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "Add Bot"
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 18
+text = "Waiting for players..."
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="StartGameButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_j2yge")
+disabled = true
+text = "Start Game"
+
+[node name="LeaveRoomButton" type="Button" parent="Panel/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Leave Room"
+
+[connection signal="pressed" from="Panel/VBoxContainer/RoomInfoContainer/CopyButton" to="." method="_on_copy_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/PlayersGrid/Player2Container/VBoxContainer/AddBotButton" to="." method="_on_add_bot_button_pressed" binds= [1]]
+[connection signal="pressed" from="Panel/VBoxContainer/PlayersGrid/Player3Container/VBoxContainer/AddBotButton" to="." method="_on_add_bot_button_pressed" binds= [2]]
+[connection signal="pressed" from="Panel/VBoxContainer/PlayersGrid/Player4Container/VBoxContainer/AddBotButton" to="." method="_on_add_bot_button_pressed" binds= [3]]
+[connection signal="pressed" from="Panel/VBoxContainer/ButtonsContainer/StartGameButton" to="." method="_on_start_game_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/ButtonsContainer/LeaveRoomButton" to="." method="_on_leave_room_button_pressed"]

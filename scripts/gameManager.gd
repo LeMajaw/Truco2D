@@ -1,12 +1,15 @@
 extends Node
 
 const CARD_SCENE = preload("res://scenes/card.tscn")
+const PLAYER_NAME_INPUT = preload("res://scenes/player_name_input.tscn")
 
-@onready var end_game_ui := get_node("../EndGameUI")
+@onready var end_game_ui := get_node("../../OverlayLayer/EndGameUI")
 @onready var win_label := end_game_ui.get_node("Panel/WinLabel")
 @onready var restart_button := end_game_ui.get_node("Panel/RestartButton")
-@onready var truco_button := get_node("../TrucoButton")
-@onready var score_label := get_node("../ScoreContainer/ScoreLabel")
+@onready var truco_button := get_node("../../UILayer/TrucoButton")
+@onready var score_label := get_node("../../UILayer/ScoreContainer/ScoreLabel")
+@onready var player_name_label := get_node("../../UILayer/PlayerNameLabel")
+@onready var bot_manager := $BotManager
 
 var player_hands = {
 	"player": [],
@@ -18,6 +21,7 @@ var deck: Array[Dictionary] = []
 var used_cards: Array[Dictionary] = []
 var manilha_value = ""
 var vira_card_data = null
+var vira_card_node = null
 var last_player_card = null
 var current_turn := 0
 
@@ -46,6 +50,7 @@ var bot_hand_previews = {
 }
 
 var turn_winners: Array[String] = []
+var player_name := "Player"
 
 const CENTER := Vector2(512, 300)
 const PLAYED_CARD_POSITIONS = {
@@ -65,16 +70,51 @@ const BOT_CARD_SPACE := 80
 func _ready():
 	get_tree().paused = false
 	end_game_ui.visible = false
+
+	# Load player name from config
+	var config = ConfigFile.new()
+	var err = config.load("user://player_settings.cfg")
+	if err == OK:
+		player_name = config.get_value("player", "name", "Player")
+
+		# Load bot difficulty if available
+		if config.has_section_key("game", "difficulty"):
+			var difficulty = config.get_value("game", "difficulty", 1) # Default to Normal
+			bot_manager.set_all_bot_difficulties(difficulty)
+
+	if has_node("BotManager"):
+		bot_manager.setup(self)
+
+	# Show player name input if first time
+	if player_name == "Player" and not config.has_section("player"):
+		show_player_name_input()
+	else:
+		start_game()
+
+func show_player_name_input():
+	var name_input = PLAYER_NAME_INPUT.instantiate()
+	name_input.name_confirmed.connect(_on_name_confirmed)
+	add_child(name_input)
+
+func _on_name_confirmed(input_name):
+	player_name = input_name
+	if player_name_label:
+		player_name_label.text = player_name
+	start_game()
+
+func start_game():
 	set_pe()
 	reset_score_label()
 	start_new_round()
+	if player_name_label:
+		player_name_label.text = player_name
 
 func set_pe():
 	randomize()
 	pe_index = randi() % 4
 	current_pe_index = pe_index
 	print("🎲 Starting Pe:", player_order[pe_index])
-	
+
 func prepare_deck():
 	var all_cards: Array[Dictionary] = []
 	var suits = ["hearts", "spades", "diamonds", "clubs"]
@@ -83,7 +123,7 @@ func prepare_deck():
 
 	for suit in suits:
 		for value in values:
-			all_cards.append({ "value": value, "suit": suit })
+			all_cards.append({"value": value, "suit": suit})
 
 	for used in used_cards:
 		if randf() < 0.1:
@@ -117,6 +157,10 @@ func identify_manilha():
 	print("🔥 Manilha:", manilha_value)
 
 func show_vira_card():
+	# Remove previous vira card if it exists
+	if is_instance_valid(vira_card_node):
+		vira_card_node.queue_free()
+
 	var vira = CARD_SCENE.instantiate()
 	vira.value = vira_card_data["value"]
 	vira.suit = vira_card_data["suit"]
@@ -124,6 +168,12 @@ func show_vira_card():
 	vira.scale = VIRA_SCALE
 	vira.face_up = true
 	add_child(vira)
+	vira_card_node = vira
+
+	# Add visual emphasis
+	var tween = create_tween()
+	vira.modulate = Color(1, 1, 1, 0)
+	tween.tween_property(vira, "modulate", Color(1, 1, 1, 1), 0.5)
 
 func show_hands():
 	for card in player_hand_cards:
@@ -153,6 +203,19 @@ func show_hands():
 func is_card_in_player_hand(card: Node2D) -> bool:
 	return player_hand_cards.has(card)
 
+func _on_card_clicked(event: InputEvent, card_data, card_node):
+	if event is InputEventMouseButton and event.pressed:
+		card_node.queue_free()
+		player_hand_cards.erase(card_node)
+		player_hands["player"].erase(card_data)
+
+		last_player_card = card_data
+		show_played_card(card_data, PLAYED_CARD_POSITIONS["player"])
+
+		await get_tree().create_timer(0.2).timeout
+		play_all_turns()
+		show_hands()
+
 func show_bot_hand_preview():
 	for key in bot_hand_previews.keys():
 		for preview in bot_hand_previews[key]:
@@ -174,29 +237,6 @@ func show_bot_hand_preview():
 			add_child(back_card)
 			bot_hand_previews[bot].append(back_card)
 
-func _on_card_hover_entered(card: Node2D) -> void:
-	if player_hand_cards.has(card):
-		card.scale = PLAYER_CARD_SCALE * 1.2
-		card.position.y -= 20
-
-func _on_card_hover_exited(card: Node2D) -> void:
-	if player_hand_cards.has(card):
-		card.scale = PLAYER_CARD_SCALE
-		card.position.y += 20
-
-func _on_card_clicked(event: InputEvent, card_data, card_node):
-	if event is InputEventMouseButton and event.pressed:
-		card_node.queue_free()
-		player_hand_cards.erase(card_node)
-		player_hands["player"].erase(card_data)
-
-		last_player_card = card_data
-		show_played_card(card_data, PLAYED_CARD_POSITIONS["player"])
-
-		await get_tree().create_timer(0.2).timeout
-		play_all_turns()
-		show_hands()
-
 func play_all_turns():
 	var order = []
 	for i in range(4):
@@ -210,7 +250,9 @@ func play_all_turns():
 		if player == "player":
 			card_data = last_player_card
 		else:
-			card_data = player_hands[player].pop_back()
+			# Use bot manager to select card based on difficulty
+			card_data = bot_manager.select_card(player, player_hands[player])
+			player_hands[player].erase(card_data)
 			show_played_card(card_data, PLAYED_CARD_POSITIONS[player])
 		played_cards[player] = card_data
 
@@ -242,10 +284,10 @@ func determine_turn_result(player_card, bot1_card, bot2_card, bot3_card):
 	current_turn += 1
 
 	var played = [
-		{ "player": "player", "card": player_card },
-		{ "player": "bot1", "card": bot1_card },
-		{ "player": "bot2", "card": bot2_card },
-		{ "player": "bot3", "card": bot3_card }
+		{"player": "player", "card": player_card},
+		{"player": "bot1", "card": bot1_card},
+		{"player": "bot2", "card": bot2_card},
+		{"player": "bot3", "card": bot3_card}
 	]
 
 	for p in played:
@@ -254,7 +296,7 @@ func determine_turn_result(player_card, bot1_card, bot2_card, bot3_card):
 	# 🟢 Sort by descending power; if tied, keep original order (first wins)
 	played.sort_custom(func(a, b):
 		if a["power"] == b["power"]:
-			return false  # maintain original order (play order)
+			return false # maintain original order (play order)
 		return a["power"] > b["power"]
 	)
 
@@ -329,13 +371,13 @@ func update_turn_indicators():
 		if i < turn_winners.size():
 			match turn_winners[i]:
 				"we":
-					stylebox.bg_color = Color(0, 1, 0)  # Green
+					stylebox.bg_color = Color(0, 1, 0) # Green
 				"them":
-					stylebox.bg_color = Color(1, 0, 0)  # Red
+					stylebox.bg_color = Color(1, 0, 0) # Red
 				_:
-					stylebox.bg_color = Color(1, 1, 0)  # Yellow
+					stylebox.bg_color = Color(1, 1, 0) # Yellow
 		else:
-			stylebox.bg_color = Color(0, 0, 0, 0)  # Transparent
+			stylebox.bg_color = Color(0, 0, 0, 0) # Transparent
 
 func get_card_power(card: Dictionary) -> int:
 	if card["value"] == manilha_value:
@@ -421,6 +463,39 @@ func start_new_round():
 	pe_index = (pe_index + 1) % 4
 	current_pe_index = pe_index
 
+	# Check if bots should call truco based on their difficulty
+	check_bot_truco_calls()
+
+func check_bot_truco_calls():
+	if truco_called:
+		return
+
+	# Only allow truco calls at the beginning of a round
+	if current_turn > 0:
+		return
+
+	# Check each bot in turn order
+	for i in range(4):
+		var player_index = (pe_index + i) % 4
+		var player = player_order[player_index]
+
+		# Skip player (human)
+		if player == "player":
+			continue
+
+		# Check if this bot should call truco
+		if bot_manager.should_call_truco(player):
+			truco_called = true
+			current_score_value = 3
+			truco_button.disabled = true
+
+			# Show truco call notification
+			print("🃏 " + player + " CALLED TRUCO! Round is now worth 3 points")
+
+			# Could add visual/audio feedback here
+
+			break
+
 func reset_score_label():
 	team_points["we"] = 0
 	team_points["them"] = 0
@@ -442,12 +517,23 @@ func _on_truco_button_pressed():
 	truco_button.disabled = true
 	print("🃏 TRUCO CALLED! Round is now worth 3 points")
 
-func show_end_game_ui(message: String):
+func show_end_game_ui(winner_team: String):
 	end_game_ui.visible = true
-	win_label.text = message.capitalize() + " WIN!"
+	win_label.text = winner_team.capitalize() + " WIN!"
 	get_tree().paused = true
+
+	# Record game result for Expert bots to learn
+	bot_manager.record_game_result(winner_team)
 
 func _on_restart_button_pressed():
 	reset_score_label()
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+# Set difficulty for all bots
+func set_all_bot_difficulties(difficulty: int):
+	bot_manager.set_all_bot_difficulties(difficulty)
+
+# Set difficulty for a specific bot
+func set_bot_difficulty(bot_name: String, difficulty: int):
+	bot_manager.set_bot_difficulty(bot_name, difficulty)

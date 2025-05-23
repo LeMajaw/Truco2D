@@ -1,0 +1,149 @@
+[gd_scene load_steps=6 format=3 uid="uid://7uvic8g1gi5g"]
+
+[ext_resource type="Script" uid="uid://g1id1jw0kp8r" path="res://scripts/main_menu.gd" id="1_lfgxs"]
+[ext_resource type="FontFile" uid="uid://cpwm7d3lrhrkk" path="res://assets/fonts/PixelifySans-Regular.ttf" id="2_lquwl"]
+[ext_resource type="Texture2D" uid="uid://de8eh4sejktos" path="res://assets/icons/truco.png" id="3_7mycd"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.901961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j2yge"]
+bg_color = Color(0.6, 0.0392157, 0.0392157, 0.501961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0.0392157, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 3
+
+[node name="MainMenu" type="CanvasLayer"]
+script = ExtResource("1_lfgxs")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0784314, 0.0784314, 0.0784314, 1)
+
+[node name="Logo" type="TextureRect" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 50.0
+offset_right = 150.0
+offset_bottom = 250.0
+grow_horizontal = 2
+texture = ExtResource("3_7mycd")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 251.0
+offset_right = 200.0
+offset_bottom = 301.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 48
+text = "TRUCO PAULISTA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuPanel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -25.0
+offset_right = 200.0
+offset_bottom = 275.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="PlayButton" type="Button" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_j2yge")
+text = "Play Local Game"
+
+[node name="MultiplayerButton" type="Button" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 28
+text = "Multiplayer"
+
+[node name="SettingsButton" type="Button" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 28
+text = "Settings"
+
+[node name="HSeparator" type="HSeparator" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ExitButton" type="Button" parent="MenuPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 28
+text = "Exit"
+
+[node name="Version" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -30.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 16
+text = "v1.0.0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[connection signal="pressed" from="MenuPanel/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="MenuPanel/VBoxContainer/MultiplayerButton" to="." method="_on_multiplayer_button_pressed"]
+[connection signal="pressed" from="MenuPanel/VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="MenuPanel/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]

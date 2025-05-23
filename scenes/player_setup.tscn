@@ -1,0 +1,133 @@
+[gd_scene load_steps=4 format=3 uid="uid://ctehmtfhueqk8"]
+
+[ext_resource type="Script" uid="uid://c7bnbl3spax42" path="res://scripts/player_setup.gd" id="1_lfgxs"]
+[ext_resource type="FontFile" uid="uid://cpwm7d3lrhrkk" path="res://assets/fonts/PixelifySans-Regular.ttf" id="2_lquwl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.901961)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 5
+
+[node name="PlayerSetup" type="CanvasLayer"]
+script = ExtResource("1_lfgxs")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -175.0
+offset_right = 250.0
+offset_bottom = 186.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 6.0
+offset_right = -20.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 32
+text = "Player Setup"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Your Name"
+
+[node name="NameInput" type="LineEdit" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+placeholder_text = "Enter your name"
+max_length = 15
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="DifficultyLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 24
+text = "Bot Difficulty"
+
+[node name="DifficultyOptions" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="EasyButton" type="Button" parent="Panel/VBoxContainer/DifficultyOptions"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Easy"
+
+[node name="NormalButton" type="Button" parent="Panel/VBoxContainer/DifficultyOptions"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Normal"
+
+[node name="HardButton" type="Button" parent="Panel/VBoxContainer/DifficultyOptions"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Hard"
+
+[node name="ExpertButton" type="Button" parent="Panel/VBoxContainer/DifficultyOptions"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Expert"
+
+[node name="HSeparator3" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 28
+text = "Start Game"
+
+[node name="BackButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_fonts/font = ExtResource("2_lquwl")
+theme_override_font_sizes/font_size = 20
+text = "Back to Menu"
+
+[connection signal="text_submitted" from="Panel/VBoxContainer/NameInput" to="." method="_on_name_input_submitted"]
+[connection signal="pressed" from="Panel/VBoxContainer/DifficultyOptions/EasyButton" to="." method="_on_easy_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/DifficultyOptions/NormalButton" to="." method="_on_normal_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/DifficultyOptions/HardButton" to="." method="_on_hard_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/DifficultyOptions/ExpertButton" to="." method="_on_expert_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

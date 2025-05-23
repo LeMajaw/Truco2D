@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://j5kckks30sg6"]
+
+[ext_resource type="Script" uid="uid://bk3mbq14csmu1" path="res://scripts/responsive_ui.gd" id="1_lfgxs"]
+
+[node name="ResponsiveUI" type="Node"]
+script = ExtResource("1_lfgxs")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
